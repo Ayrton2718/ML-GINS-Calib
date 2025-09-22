@@ -33,7 +33,8 @@ computeAverageTransform(const std::vector<Eigen::Isometry3d> &transforms);
 CloudPtr
 buildPointCloudMap(const std::vector<std::string> &cloud_paths,
                    const std::vector<Eigen::Isometry3d> &transforms,
-                   const Eigen::Isometry3d T_ext = Eigen::Isometry3d::Identity());
+                   const Eigen::Isometry3d T_ext = Eigen::Isometry3d::Identity(),
+                   double voxel_grid_size = 0.5);
 
 double analyzeTerrainRoughness(const CloudPtr &cloud,
                               const std::vector<Eigen::Isometry3d> &poses);
@@ -66,10 +67,24 @@ int main() {
   int time_precision = opt_params["output"]["time_precision"].as<int>();
   double time_scale_factor = opt_params["output"]["time_scale_factor"].as<double>();
   std::string output_file = opt_params["output"]["extrinsic_output_file"].as<std::string>();
+  
+  // Load map output settings
+  bool save_maps = opt_params["output"]["save_maps"].as<bool>(true);
+  std::string map_output_dir = opt_params["output"]["map_output_directory"].as<std::string>("./maps/");
+  
+  // Load point cloud processing parameters
+  double voxel_size = opt_params["point_cloud"]["voxel_size"].as<double>();
+  double downsample_leaf_size = opt_params["point_cloud"]["downsample_leaf_size"].as<double>();
 
   auto ext_infos = data_loader.ltg_ext_infos_;
   auto T_vec = data_loader.gnss_ins_data_;
   data_loader.SetTrajectoryOrigin(T_vec[0], T_vec);
+
+  // Create map output directory if saving maps
+  if (save_maps) {
+    fs::create_directories(map_output_dir);
+    std::cout << "Maps will be saved to: " << map_output_dir << std::endl;
+  }
 
   auto selection = selectKeyframes(T_vec, translation_threshold, rotation_threshold);
 
@@ -102,10 +117,11 @@ int main() {
     opt.SetNumThreads(num_threads);
     opt.SetOptIter(lg_max_iter);
     opt.SetMaxCorrDis(lg_max_corr_dist);
+    opt.SetVoxelSize(downsample_leaf_size);
     opt.SetGinsHeight(data_loader.gins_installation_height_);
 
     CloudPtr map_lidar_align =
-        buildPointCloudMap(cloud_file_path_arr, T_vec_selection, ext_infos[i].T_ext_);
+        buildPointCloudMap(cloud_file_path_arr, T_vec_selection, ext_infos[i].T_ext_, voxel_size);
     lidar_align_map_arr.push_back(map_lidar_align);
 
     auto T_ext_opt = opt.LgOptimizationCoarse(
@@ -114,7 +130,7 @@ int main() {
     ext_infos[i].T_ext_ = T_ext_opt;
 
     CloudPtr map_ori =
-        buildPointCloudMap(cloud_file_path_arr, T_vec_selection, ext_infos[i].T_ext_);
+        buildPointCloudMap(cloud_file_path_arr, T_vec_selection, ext_infos[i].T_ext_, voxel_size);
 
     T_ext_opt = opt.LgOptimizationRefine(cloud_file_path_arr, T_vec_selection,
                                          T_ext_opt);
@@ -124,12 +140,29 @@ int main() {
     T_exts_arr.emplace_back(T_exts);
 
     CloudPtr map_opt =
-        buildPointCloudMap(cloud_file_path_arr, T_vec_selection, ext_infos[i].T_ext_);
+        buildPointCloudMap(cloud_file_path_arr, T_vec_selection, ext_infos[i].T_ext_, voxel_size);
 
     if (i == 0)
       gins_poses = T_vec_selection;
 
     lg_map_arr.push_back(std::make_pair(map_ori, map_opt));
+
+    // Save individual LiDAR maps if enabled
+    if (save_maps) {
+      std::string lidar_name = ext_infos[i].lidar_name_;
+      std::string map_ori_path = map_output_dir + lidar_name + "_before_calibration.pcd";
+      std::string map_opt_path = map_output_dir + lidar_name + "_after_calibration.pcd";
+      std::string map_align_path = map_output_dir + lidar_name + "_aligned.pcd";
+      
+      pcl::io::savePCDFileBinary(map_ori_path, *map_ori);
+      pcl::io::savePCDFileBinary(map_opt_path, *map_opt);
+      pcl::io::savePCDFileBinary(map_align_path, *map_lidar_align);
+      
+      std::cout << "Saved " << lidar_name << " maps:" << std::endl;
+      std::cout << "  Before calibration: " << map_ori_path << std::endl;
+      std::cout << "  After calibration: " << map_opt_path << std::endl;
+      std::cout << "  Aligned map: " << map_align_path << std::endl;
+    }
 
     auto end = std::chrono::steady_clock::now();
     auto duration =
@@ -163,6 +196,30 @@ int main() {
   std::cout << std::endl << std::endl;
 
   std::cout << "Multi-LiDAR Extrinsic Calibration" << std::endl;
+  
+  // Check if we have multiple LiDAR sensors
+  if (ext_infos.size() < 2) {
+    std::cout << "Only one LiDAR sensor detected. Skipping multi-LiDAR calibration." << std::endl;
+    
+    // Output final results for single LiDAR
+    std::cout << std::endl << "Final Extrinsic Parameters:" << std::endl;
+    for (size_t i = 0; i < ext_infos.size(); ++i) {
+      Eigen::Vector3d t = ext_infos[i].T_ext_.translation();
+      Eigen::Quaterniond q(ext_infos[i].T_ext_.rotation());
+      std::cout << "LiDAR " << ext_infos[i].lidar_name_ << " T_imu_lidar:" << std::endl;
+      std::cout << "  Position: " << t.transpose() << std::endl;
+      std::cout << "  Quaternion (w,x,y,z): " << q.w() << " " << q.x() << " " << q.y() << " " << q.z() << std::endl;
+      std::cout << "  Transformation Matrix:" << std::endl;
+      std::cout << ext_infos[i].T_ext_.matrix() << std::endl << std::endl;
+    }
+    
+    // Save single LiDAR maps summary if enabled
+    if (save_maps) {
+      std::cout << "All LiDAR maps have been saved to: " << map_output_dir << std::endl;
+    }
+    
+    return 0;
+  }
 
   std::pair<CloudPtr, CloudPtr> ml_map;
 
@@ -170,6 +227,7 @@ int main() {
   opt.SetNumThreads(num_threads);
   opt.SetOptIter(ml_max_iter);
   opt.SetMaxCorrDis(ml_max_corr_dist);
+  opt.SetVoxelSize(downsample_leaf_size);
 
   std::vector<std::string> multi_lidar_cloud_paths;
   std::vector<std::vector<std::string>> multi_lidar_cloud_paths2;
@@ -202,7 +260,7 @@ int main() {
   }
 
   CloudPtr ml_map_ori =
-      buildPointCloudMap(multi_lidar_cloud_paths, multi_lidar_poses);
+      buildPointCloudMap(multi_lidar_cloud_paths, multi_lidar_poses, Eigen::Isometry3d::Identity(), voxel_size);
 
   auto start = std::chrono::steady_clock::now();
 
@@ -216,7 +274,7 @@ int main() {
     }
   }
 
-  CloudPtr ml_map_opt = buildPointCloudMap(multi_lidar_cloud_paths, opt_poses);
+  CloudPtr ml_map_opt = buildPointCloudMap(multi_lidar_cloud_paths, opt_poses, Eigen::Isometry3d::Identity(), voxel_size);
 
   analyzeTerrainRoughness(ml_map_opt, opt_poses);
 
@@ -242,7 +300,18 @@ int main() {
   std::cout << "Average running time: " << duration / time_scale_factor << "s"
             << std::endl;
 
-
+  // Save multi-LiDAR maps if enabled
+  if (save_maps && ext_infos.size() >= 2) {
+    std::string ml_map_ori_path = map_output_dir + "multi_lidar_before_calibration.pcd";
+    std::string ml_map_opt_path = map_output_dir + "multi_lidar_after_calibration.pcd";
+    
+    pcl::io::savePCDFileBinary(ml_map_ori_path, *ml_map.first);
+    pcl::io::savePCDFileBinary(ml_map_opt_path, *ml_map.second);
+    
+    std::cout << "Saved multi-LiDAR maps:" << std::endl;
+    std::cout << "  Before calibration: " << ml_map_ori_path << std::endl;
+    std::cout << "  After calibration: " << ml_map_opt_path << std::endl;
+  }
 
   // save multi-lidar extrinsic parameters
   std::ofstream outfile(output_file);
@@ -406,7 +475,8 @@ computeAverageTransform(const std::vector<Eigen::Isometry3d> &transforms) {
 
 CloudPtr buildPointCloudMap(const std::vector<std::string> &cloud_paths,
                             const std::vector<Eigen::Isometry3d> &transforms,
-                            const Eigen::Isometry3d T_ext) {
+                            const Eigen::Isometry3d T_ext,
+                            double voxel_grid_size) {
   CloudPtr map(new PointCloudType);
   for (size_t i = 0; i < cloud_paths.size(); ++i) {
     CloudPtr cloud(new PointCloudType);
@@ -428,7 +498,7 @@ CloudPtr buildPointCloudMap(const std::vector<std::string> &cloud_paths,
   }
 
   pcl::VoxelGrid<PointType> vg;
-  vg.setLeafSize(0.2, 0.2, 0.2);
+  vg.setLeafSize(voxel_grid_size, voxel_grid_size, voxel_grid_size);
   vg.setInputCloud(map);
   vg.filter(*map);
 

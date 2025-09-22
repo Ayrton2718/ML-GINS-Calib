@@ -1,4 +1,4 @@
-data_dir: data
+data_dir: data2
 gnss/ins: gins_sync
 data_mask_path: data_mask.txt
 
@@ -12,12 +12,12 @@ optimization_params:
   # First stage optimization (LiDAR-GNSS/INS)
   lidar_gins_optimization:
     max_iterations: 20
-    max_correspondence_distance: 0.5
+    max_correspondence_distance: 1.0
   
   # Second stage optimization (Multi-LiDAR)
   multi_lidar_optimization:
-    max_iterations: 30
-    max_correspondence_distance: 0.5
+    max_iterations: 50
+    max_correspondence_distance: 1.0
   
   # Keyframe selection parameters
   keyframe_selection:
@@ -34,6 +34,10 @@ optimization_params:
     time_scale_factor: 1000.0
     # Output file path for extrinsic parameters
     extrinsic_output_file: "output/extrinsic_parameters.txt"
+    # Whether to save calibration maps
+    save_maps: true
+    # Directory to save calibration maps
+    map_output_directory: "./maps/"
   
   # Point cloud processing parameters
   point_cloud:
@@ -59,121 +63,166 @@ optimization_params:
     translation_std: 0.01
 
 lidar_list:
-  - livox
-  - middle
-  - left
-  - right
-  - back
+  # - livox
+  # - middle
+  # - left
+  # - right
+  # - back
 #  - ouster
 #  - front_left
 #  - front_right
 #  - avia
 #  - velo
+  - front
+  - left
+  - right
+  - back
 
 # T_imu_lidar
 init_ext:
-  livox:
-   position:
-     x: 0
-     y: 0
-     z: 0
-   orientation:
-     w: 0.99
-     x: 0.01
-     y: -0.12
-     z: -0.01
-  middle:
-   position:
-     x: 0
-     y: 0
-     z: 0
-   orientation:
-     w: 0.653126
-     x: -0.0287627
-     y: 0.75669
-     z: 0.00441556
-  right:
-   position:
-     x: 0
-     y: 0
-     z: 0
-   orientation:
-     w: 0.494543
-     x: 0.470428
-     y: 0.527599
-     z: -0.505732
+  # livox:
+  #  position:
+  #    x: 0
+  #    y: 0
+  #    z: 0
+  #  orientation:
+  #    w: 0.99
+  #    x: 0.01
+  #    y: -0.12
+  #    z: -0.01
+  # middle:
+  #  position:
+  #    x: 0
+  #    y: 0
+  #    z: 0
+  #  orientation:
+  #    w: 0.653126
+  #    x: -0.0287627
+  #    y: 0.75669
+  #    z: 0.00441556
+  # right:
+  #  position:
+  #    x: 0
+  #    y: 0
+  #    z: 0
+  #  orientation:
+  #    w: 0.494543
+  #    x: 0.470428
+  #    y: 0.527599
+  #    z: -0.505732
+  # left:
+  #  position:
+  #    x: 0
+  #    y: 0
+  #    z: 0
+  #  orientation:
+  #    w: -0.480985
+  #    x: 0.504621
+  #    y: -0.503708
+  #    z: -0.510186
+  # back:
+  #  position:
+  #    x: 0
+  #    y: 0
+  #    z: 0
+  #  orientation:
+  #    w: 0.0400058
+  #    x: -0.6901037
+  #    y: -0.0600087
+  #    z: 0.7201079
+
+  # ouster:
+  #  position:
+  #    x: 0
+  #    y: 0
+  #    z: 0
+  #  orientation:
+  #    w: 1
+  #    x: 0
+  #    y: 0
+  #    z: 0
+
+  # front_left:
+  #   position:
+  #     x: 0
+  #     y: 0
+  #     z: 0
+  #   orientation:
+  #     w: 0.705534
+  #     x: 0.0335795
+  #     y: 0.00638963
+  #     z: 0.707852
+
+  # front_right:
+  #   position:
+  #     x: 0
+  #     y: 0
+  #     z: 0
+  #   orientation:
+  #     w: 0.715456
+  #     x: -0.0315438
+  #     y: -0.0502189
+  #     z: 0.696136
+
+  # avia:
+  #   position:
+  #     x: 0
+  #     y: 0
+  #     z: 0
+  #   orientation:
+  #     w: 0.00
+  #     x: -0.00
+  #     y: -0.00
+  #     z: 1.00
+
+  # velo:
+  #   position:
+  #     x: 0
+  #     y: 0
+  #     z: 0
+  #   orientation:
+  #     w: 0.97
+  #     x: 0.00
+  #     y: 0.26
+  #     z: 0.00
+
+  front:
+    position:
+      x: 0.0
+      y: 4.7557
+      z: 2.5442
+    orientation:
+      w: 0.70710678
+      x: 0.00000000
+      y: 0.00000000
+      z: 0.70710678
   left:
-   position:
-     x: 0
-     y: 0
-     z: 0
-   orientation:
-     w: -0.480985
-     x: 0.504621
-     y: -0.503708
-     z: -0.510186
+    position:
+      x: -0.9125
+      y: 2.04
+      z: 2.6303
+    orientation:
+      w: 0.00000000
+      x: 0.00000000
+      y: 0.00000000
+      z: 1.00000000
+  right:
+    position:
+      x: 0.9125
+      y: 2.22
+      z: 2.6303
+    orientation:
+      w: 1.00000000
+      x: 0.00000000
+      y: 0.00000000
+      z: 0.00000000
   back:
-   position:
-     x: 0
-     y: 0
-     z: 0
-   orientation:
-     w: 0.0400058
-     x: -0.6901037
-     y: -0.0600087
-     z: 0.7201079
-
-  ouster:
-   position:
-     x: 0
-     y: 0
-     z: 0
-   orientation:
-     w: 1
-     x: 0
-     y: 0
-     z: 0
-
-  front_left:
     position:
-      x: 0
-      y: 0
-      z: 0
+      x: 0.0
+      y: -0.5277000000000001
+      z: 2.5642
     orientation:
-      w: 0.705534
-      x: 0.0335795
-      y: 0.00638963
-      z: 0.707852
-
-  front_right:
-    position:
-      x: 0
-      y: 0
-      z: 0
-    orientation:
-      w: 0.715456
-      x: -0.0315438
-      y: -0.0502189
-      z: 0.696136
-
-  avia:
-    position:
-      x: 0
-      y: 0
-      z: 0
-    orientation:
-      w: 0.00
-      x: -0.00
-      y: -0.00
-      z: 1.00
-
-  velo:
-    position:
-      x: 0
-      y: 0
-      z: 0
-    orientation:
-      w: 0.97
-      x: 0.00
-      y: 0.26
-      z: 0.00
+      w: 0.70710678
+      x: 0.00000000
+      y: 0.00000000
+      z: -0.70710678

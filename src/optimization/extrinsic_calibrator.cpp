@@ -182,8 +182,7 @@ Eigen::Isometry3d calib::ExtrinsicCalibrator::LgOptimizationCoarse(
     return Eigen::Isometry3d::Identity();
   }
 
-  auto load_cloud_func = [&](const std::string &path, CloudPtr &cloud,
-                             float voxel_size = 0.2) {
+  auto load_cloud_func = [&](const std::string &path, CloudPtr &cloud) {
     if (pcl::io::loadPCDFile(path, *cloud) == -1) {
       std::cerr << "Could not read point cloud data." << std::endl;
       return false;
@@ -199,7 +198,7 @@ Eigen::Isometry3d calib::ExtrinsicCalibrator::LgOptimizationCoarse(
     }
 
     pcl::ApproximateVoxelGrid<PointType> avg;
-    avg.setLeafSize(voxel_size, voxel_size, voxel_size);
+    avg.setLeafSize(voxel_size_, voxel_size_, voxel_size_);
     avg.setInputCloud(filtered_cloud);
     avg.filter(*cloud);
 
@@ -534,8 +533,7 @@ Eigen::Isometry3d calib::ExtrinsicCalibrator::LgOptimizationRefine(
     return Eigen::Isometry3d::Identity();
   }
 
-  auto load_cloud_func = [&](const std::string &path, CloudPtr &cloud,
-                             float voxel_size = 0.2) {
+  auto load_cloud_func = [&](const std::string &path, CloudPtr &cloud) {
     if (pcl::io::loadPCDFile(path, *cloud) == -1) {
       std::cerr << "Could not read point cloud data." << std::endl;
       return false;
@@ -551,7 +549,7 @@ Eigen::Isometry3d calib::ExtrinsicCalibrator::LgOptimizationRefine(
     }
 
     pcl::ApproximateVoxelGrid<PointType> avg;
-    avg.setLeafSize(voxel_size, voxel_size, voxel_size);
+    avg.setLeafSize(voxel_size_, voxel_size_, voxel_size_);
     avg.setInputCloud(filtered_cloud);
     avg.filter(*cloud);
 
@@ -680,8 +678,7 @@ void calib::ExtrinsicCalibrator::JointOptimization(
     std::cerr << "Invalid input data." << std::endl;
   }
 
-  auto load_cloud_func = [&](const std::string &path, CloudPtr &cloud,
-                             float voxel_size = 0.2) {
+  auto load_cloud_func = [&](const std::string &path, CloudPtr &cloud) {
     if (pcl::io::loadPCDFile(path, *cloud) == -1) {
       std::cerr << "Could not read point cloud data." << std::endl;
       return false;
@@ -697,7 +694,7 @@ void calib::ExtrinsicCalibrator::JointOptimization(
     }
 
     pcl::ApproximateVoxelGrid<PointType> avg;
-    avg.setLeafSize(voxel_size, voxel_size, voxel_size);
+    avg.setLeafSize(voxel_size_, voxel_size_, voxel_size_);
     avg.setInputCloud(filtered_cloud);
     avg.filter(*cloud);
 

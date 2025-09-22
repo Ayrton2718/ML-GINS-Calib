@@ -39,6 +39,7 @@ public:
   void SetMaxCorrDis(double dis) { max_corr_dis_ = dis; }
   void SetSampleRatio(double ratio) { sampling_ratio_ = ratio; }
   void SetLtgPriorFactor(bool prior) { ltg_prior_factor_ = prior; }
+  void SetVoxelSize(double size) { voxel_size_ = size; }
   void SetGinsHeight(double height) {
     T_ground_imu_.setIdentity();
     T_ground_imu_.translation().z() = height;
@@ -164,6 +165,7 @@ private:
   double max_corr_dis_ = 1.0;
   double sampling_ratio_ = 0.01;
   bool sampling_ = true;
+  double voxel_size_ = 0.2;
 
   bool ltg_prior_factor_ = true;
 
