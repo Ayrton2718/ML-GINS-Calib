@@ -26,8 +26,8 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
@@ -69,7 +69,7 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose,
-                boost::optional<Matrix &> H1 = boost::none) const override {
+                Matrix * H1 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
     gtsam::Pose3 pose_a(pose_a_);
@@ -80,14 +80,14 @@ public:
     gtsam::Point3 point_a_trans1 =
         pose.transformFrom(point_a, H1 ? &Dpose_a : 0);
     gtsam::Point3 point_a_trans2 =
-        pose_a.transformFrom(point_a_trans1, boost::none, H1 ? &Dpoint_a : 0);
+        pose_a.transformFrom(point_a_trans1, nullptr, H1 ? &Dpoint_a : 0);
 
     gtsam::Matrix36 Dpose_b;
     gtsam::Matrix33 Dpoint_b;
     gtsam::Point3 point_b_trans1 =
         pose.transformFrom(point_b, H1 ? &Dpose_b : 0);
     gtsam::Point3 point_b_trans2 =
-        pose_b.transformFrom(point_b_trans1, boost::none, H1 ? &Dpoint_b : 0);
+        pose_b.transformFrom(point_b_trans1, nullptr, H1 ? &Dpoint_b : 0);
 
     gtsam::Vector3 residual;
     residual = point_a_trans2 - point_b_trans2;
@@ -113,7 +113,7 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose,
-                boost::optional<Matrix &> H1 = boost::none) const override {
+                Matrix * H1 = nullptr) const override {
     gtsam::Pose3 pose_v(pose_v_);
 
     gtsam::Matrix66 D_inv;
@@ -121,7 +121,7 @@ public:
 
     gtsam::traits<gtsam::Pose3>::ChartJacobian::Jacobian Hlocal;
     gtsam::Vector residual = gtsam::traits<gtsam::Pose3>::Local(
-        pose_v, pose.inverse(), boost::none, &Hlocal);
+        pose_v, pose.inverse(), nullptr, &Hlocal);
 
     if (H1) {
       H1->resize(6, 6);
@@ -147,9 +147,9 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2, const Pose3 &pose3,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none,
-                boost::optional<Matrix &> H3 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr,
+                Matrix * H3 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
@@ -208,9 +208,9 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2, const Pose3 &pose3,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none,
-                boost::optional<Matrix &> H3 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr,
+                Matrix * H3 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
@@ -268,9 +268,9 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2, const Pose3 &pose3,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none,
-                boost::optional<Matrix &> H3 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr,
+                Matrix * H3 = nullptr) const override {
     gtsam::Matrix66 Dpose_1, Dpose_31;
     gtsam::Pose3 pose_a_trans =
         pose1.compose(pose3, H1 ? &Dpose_1 : 0, H3 ? &Dpose_31 : 0);
@@ -285,7 +285,7 @@ public:
 
     gtsam::traits<gtsam::Pose3>::ChartJacobian::Jacobian Hlocal;
     gtsam::Vector residual = gtsam::traits<gtsam::Pose3>::Local(
-        pose_delta_, pose_delta_ab, boost::none, &Hlocal);
+        pose_delta_, pose_delta_ab, nullptr, &Hlocal);
 
     if (H1) {
       H1->resize(6, 6);
@@ -328,10 +328,10 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2, const Pose3 &pose3,
-                const Pose3 &pose4, boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none,
-                boost::optional<Matrix &> H3 = boost::none,
-                boost::optional<Matrix &> H4 = boost::none) const override {
+                const Pose3 &pose4, Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr,
+                Matrix * H3 = nullptr,
+                Matrix * H4 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
@@ -400,9 +400,9 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2, const Pose3 &pose3,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none,
-                boost::optional<Matrix &> H3 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr,
+                Matrix * H3 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
@@ -433,8 +433,8 @@ public:
       //      *H1 = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
       //          std::bind(&LtLFactor2::evaluateError, this,
       //          std::placeholders::_1,
-      //                    pose2, pose3, boost::none, boost::none,
-      //                    boost::none),
+      //                    pose2, pose3, nullptr, nullptr,
+      //                    nullptr),
       //          pose1);
     }
 
@@ -443,8 +443,8 @@ public:
       *H2 = w_ * (Dpoint_a * Dpose_a);
       //      *H2 = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
       //          std::bind(&LtLFactor2::evaluateError, this, pose1,
-      //                    std::placeholders::_1, pose3, boost::none,
-      //                    boost::none, boost::none),
+      //                    std::placeholders::_1, pose3, nullptr,
+      //                    nullptr, nullptr),
       //          pose2);
     }
 
@@ -453,8 +453,8 @@ public:
       *H3 = w_ * (-Dpoint_b * Dpose_b);
       //      *H3 = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
       //          std::bind(&LtLFactor2::evaluateError, this, pose1, pose2,
-      //                    std::placeholders::_1, boost::none, boost::none,
-      //                    boost::none),
+      //                    std::placeholders::_1, nullptr, nullptr,
+      //                    nullptr),
       //          pose3);
     }
 
@@ -481,9 +481,9 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2, const Pose3 &pose3,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none,
-                boost::optional<Matrix &> H3 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr,
+                Matrix * H3 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
@@ -516,8 +516,8 @@ public:
       //      *H1 = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
       //          std::bind(&LtLFactor3::evaluateError, this,
       //          std::placeholders::_1,
-      //                    pose2, pose3, boost::none, boost::none,
-      //                    boost::none),
+      //                    pose2, pose3, nullptr, nullptr,
+      //                    nullptr),
       //          pose1);
     }
 
@@ -526,8 +526,8 @@ public:
       *H2 = w_ * (Dpoint_a * Dpose_a - Dpoint_b * Dpose_b);
       //      *H2 = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
       //          std::bind(&LtLFactor3::evaluateError, this, pose1,
-      //                    std::placeholders::_1, pose3, boost::none,
-      //                    boost::none, boost::none),
+      //                    std::placeholders::_1, pose3, nullptr,
+      //                    nullptr, nullptr),
       //          pose2);
     }
 
@@ -536,8 +536,8 @@ public:
       *H3 = w_ * -Dpose_base2;
       //      *H3 = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
       //          std::bind(&LtLFactor3::evaluateError, this, pose1, pose2,
-      //                    std::placeholders::_1, boost::none, boost::none,
-      //                    boost::none),
+      //                    std::placeholders::_1, nullptr, nullptr,
+      //                    nullptr),
       //          pose3);
     }
 
@@ -564,9 +564,9 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2, const Pose3 &pose3,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none,
-                boost::optional<Matrix &> H3 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr,
+                Matrix * H3 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
@@ -624,8 +624,8 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
@@ -677,8 +677,8 @@ public:
 
   gtsam::Vector
   evaluateError(const Pose3 &pose1, const Pose3 &pose2,
-                boost::optional<Matrix &> H1 = boost::none,
-                boost::optional<Matrix &> H2 = boost::none) const override {
+                Matrix * H1 = nullptr,
+                Matrix * H2 = nullptr) const override {
     gtsam::Point3 point_a(point_a_(0), point_a_(1), point_a_(2));
     gtsam::Point3 point_b(point_b_(0), point_b_(1), point_b_(2));
 
